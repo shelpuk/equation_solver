@@ -40,17 +40,17 @@ class Net(nn.Module):
 
 model = Net()
 
-f = open('train2.log', 'w')
+model.cuda()
 
-#model.load_state_dict(torch.load('test.pt'))
+#model = torch.load('test.pt')
+
+f = open('train2.log', 'w')
 
 #if torch.cuda.device_count() > 1:
 #  print("Let's use", torch.cuda.device_count(), "GPUs!")
 #  model = nn.DataParallel(model)
 
-model.cuda()
-
-optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.5)
+optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
 
 def train(epoch):
     model.train()
@@ -68,7 +68,7 @@ def train(epoch):
         loss.backward()
         optimizer.step()
         if batch_idx % 1000 == 0:
-            event = 'Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(epoch, batch_idx * len(data), len(train_loader.dataset), 100. * batch_idx / len(train_loader), loss.data[0])
+            event = 'Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(epoch, batch_idx * len(data), len(train_loader.dataset), 100. * batch_idx / len(train_loader), float(loss) / train_loader.batch_size)
             print(event)
             f.write(event+'\n')
 
@@ -89,15 +89,22 @@ def test():
         output = model(data)
 
         test_loss += eq_nll_loss(input=output, target=label, eq_weight=weight)  # sum up batch loss
-        pred = output.data.max(1, keepdim=True)[1] # get the index of the max log-probability
-        correct += pred.eq(label.data.view_as(pred)).cpu().sum()
+        #pred = output.data.max(1, keepdim=True)[1] # get the index of the max log-probability
+        pred = torch.round(output)
 
-    test_loss /= len(test_loader.dataset)
-    event = '\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(float(test_loss), correct, len(test_loader.dataset), 100. * correct / len(test_loader.dataset))
+        #print(pred)
+        #print(label)
+
+        #print()
+
+        correct += sum(pred.long() == label).cpu()
+
+    #test_loss /= len(test_loader.dataset)
+    event = '\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(float(test_loss)/len(test_loader.dataset), int(correct), len(test_loader.dataset), 100. * int(correct) / len(test_loader.dataset))
     print(event)
     f.write(event+'\n')
 
 for epoch in range(1, 1000):
     test()
     train(epoch)
-    torch.save(model.state_dict(), 'test1.pt')
+    torch.save(model, 'test1.pt')

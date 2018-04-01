@@ -34,7 +34,7 @@ def eq_nll_loss(input, target, eq_weight, weight=None, size_average=True, ignore
     """
     input_clipped = torch.clamp(input, epsilon, 1-epsilon)
 
-    m = input.shape[0]
+    #m = input.shape[0]
 
     #print(input.shape)
     #print(input_clipped.shape)
@@ -57,4 +57,4 @@ def eq_nll_loss(input, target, eq_weight, weight=None, size_average=True, ignore
 
     loss = loss*eq_weight.float()
 
-    return torch.sum(loss) / m
+    return torch.sum(loss)
