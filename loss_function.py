@@ -5,7 +5,7 @@ from functools import reduce
 
 import torch
 
-def eq_nll_loss(input, target, eq_weight, weight=None, size_average=True, ignore_index=-100, reduce=True, epsilon=1e-15):
+def eq_nll_loss(input, target, eq_weight, weight=None, size_average=True, ignore_index=-100, reduce=True, epsilon=1e-5):
     r"""The negative log likelihood loss.
 
     See :class:`~torch.nn.NLLLoss` for details.

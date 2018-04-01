@@ -95,9 +95,9 @@ def test():
         #print(pred)
         #print(label)
 
-        #print()
+        #correct += sum(pred.long() == label).cpu()
 
-        correct += sum(pred.long() == label).cpu()
+        correct += pred.eq(label.float()).long().cpu().sum()
 
     #test_loss /= len(test_loader.dataset)
     event = '\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(float(test_loss)/len(test_loader.dataset), int(correct), len(test_loader.dataset), 100. * int(correct) / len(test_loader.dataset))
