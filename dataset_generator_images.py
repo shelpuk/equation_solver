@@ -6,18 +6,35 @@ import numpy as np
 from torch.utils.data import Dataset
 import _pickle
 import random
+from PIL import Image, ImageDraw, ImageFont
 
-def eq_to_binary(a, x, b):
-    def int_to_binary(i, num_digits):
-        array_str = "{0:0"+str(num_digits)+"b}"
-        return np.array(list(array_str.format(i)), dtype='float32')
-    a_bin = int_to_binary(a, num_digits=10)
-    x_bin = int_to_binary(x, num_digits=10)
-    b_bin = int_to_binary(-b, num_digits=20)
+def generate_images_linear(a, b, x):
 
-    return np.concatenate((a_bin, x_bin, b_bin), axis=0)
+    img_eq = Image.new('L', (100, 30), color=0)
 
-class equation_binary_dataset_train(Dataset):
+    fnt = ImageFont.truetype('arial.ttf', 15)
+    d = ImageDraw.Draw(img_eq)
+    if b>=0: sign='+'
+    else: sign = ''
+    d.text((10, 10), str(a)+'x'+sign+str(b), font=fnt, fill=255)
+
+    img_ans = Image.new('L', (100, 30), color=0)
+    d = ImageDraw.Draw(img_ans)
+    d.text((10, 10), str(x), font=fnt, fill=255)
+
+    img_eq.show()
+    img_ans.show()
+
+    return img_eq, img_ans
+
+def generate_data_point(a, b, x):
+    img_eq, img_ans = generate_images_linear(a, b, x)
+    img_eq_array = (np.array(img_eq) / 255)
+    img_ans_array = np.array(img_ans) / 255
+
+    return np.concatenate((img_eq_array.reshape(img_eq_array.shape[0], img_eq_array.shape[1], 1), img_ans_array.reshape(img_ans_array.shape[0], img_ans_array.shape[1], 1)), axis=2)
+
+class equation_linear_images_dataset_train(Dataset):
 
     def __init__(self, cv_set_file, right_asnwer_chance):
         self.cv_set = _pickle.load(open(cv_set_file, 'rb'))
@@ -53,12 +70,12 @@ class equation_binary_dataset_train(Dataset):
         #print(weight)
         label = np.array([label])
 
-        sample = {'a': a, 'b': b, 'x': x, 'label': label, 'label_array': label_array, 'true_x': true_x, 'weight': weight, 'feature_vector': eq_to_binary(a, x, b)}
+        sample = {'a': a, 'b': b, 'x': x, 'label': label, 'label_array': label_array, 'true_x': true_x, 'weight': weight, 'feature_vector': generate_data_point(a, b, x)}
 
         return sample
 
 
-class equation_binary_dataset_cv(Dataset):
+class equation_linear_images_dataset_cv(Dataset):
 
     def __init__(self, cv_set_file, right_asnwer_chance):
         self.cv_set = _pickle.load(open(cv_set_file, 'rb'))
@@ -92,6 +109,8 @@ class equation_binary_dataset_cv(Dataset):
         label = np.array([label])
 
 
-        sample = {'a': a, 'b': b, 'x': x, 'label': label, 'label_array': label_array, 'true_x': true_x, 'weight': weight, 'feature_vector': eq_to_binary(a, x, b)}
+        sample = {'a': a, 'b': b, 'x': x, 'label': label, 'label_array': label_array, 'true_x': true_x, 'weight': weight, 'feature_vector': generate_data_point(a, b, x)}
 
         return sample
+
+
