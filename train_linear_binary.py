@@ -1,15 +1,11 @@
 from dataset_generator import *
 import torch
-import pandas as pd
-import numpy as np
-from torch.utils.data import Dataset, DataLoader
-import torch.nn as nn
-import torch.nn.functional as F
+from torch.utils.data import DataLoader
 import torch.optim as optim
-from torchvision import datasets, transforms
 from torch.autograd import Variable
 from loss_function import eq_nll_loss
-import sys
+from models import *
+import models
 
 train_dataset = equation_binary_dataset_train(cv_set_file='cv_set_linear.p', right_asnwer_chance=.5)
 test_dataset = equation_binary_dataset_cv(cv_set_file='cv_set_linear.p', right_asnwer_chance=.5)
@@ -21,31 +17,13 @@ test_loader = DataLoader(test_dataset, batch_size=50, shuffle=True, num_workers=
 #    print(sample_batched['feature_vector'].shape)
 #    if i_batch == 3: break
 
-class Net(nn.Module):
-    def __init__(self):
-        super(Net, self).__init__()
-        self.fc1 = nn.Linear(40, 100)
-        self.fc1_bn = nn.BatchNorm1d(100)
-        self.fc2 = nn.Linear(100, 100)
-        self.fc2_bn = nn.BatchNorm1d(100)
-        self.fc3 = nn.Linear(100, 100)
-        self.fc3_bn = nn.BatchNorm1d(100)
-        self.fc4 = nn.Linear(100, 1)
-
-    def forward(self, x):
-        x = (F.relu(self.fc1_bn(self.fc1(x))))
-        x = (F.relu(self.fc2_bn(self.fc2(x))))
-        x = (F.relu(self.fc3_bn(self.fc3(x))))
-        x = F.sigmoid(self.fc4(x))
-        return x
-
-model = Net()
+model = models.eq_net_ff()
 
 model.cuda()
 
 #model = torch.load('test.pt')
 
-f = open('log_weight.log', 'w')
+f = open('log_weight_extended_arch.log', 'w')
 
 #if torch.cuda.device_count() > 1:
 #  print("Let's use", torch.cuda.device_count(), "GPUs!")
