@@ -8,6 +8,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.autograd import Variable
+from loss_function import eq_nll_loss
 
 train_dataset = equation_binary_dataset_train(cv_set_file='cv_set_linear.p', right_asnwer_chance=.5)
 test_dataset = equation_binary_dataset_cv(cv_set_file='cv_set_linear.p', right_asnwer_chance=.5)
@@ -28,13 +29,14 @@ class Net(nn.Module):
         self.fc2_bn = nn.BatchNorm1d(100)
         self.fc3 = nn.Linear(100, 100)
         self.fc3_bn = nn.BatchNorm1d(100)
-
+        self.fc4 = nn.Linear(100, 1)
 
     def forward(self, x):
         x = F.dropout(F.relu(self.fc1_bn(self.fc1(x))))
         x = F.dropout(F.relu(self.fc2_bn(self.fc2(x))))
         x = F.dropout(F.relu(self.fc3_bn(self.fc3(x))))
-        return F.log_softmax(x, dim=1)
+        x = F.sigmoid(self.fc4(x))
+        return x
 
 model = Net()
 
@@ -48,20 +50,21 @@ f = open('train2.log', 'w')
 
 model.cuda()
 
-optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.5)
 
 def train(epoch):
     model.train()
     for batch_idx, sample_batched in enumerate(train_loader):
         data = sample_batched['feature_vector']
         label = sample_batched['label']
+        label_array = sample_batched['label_array']
         weight = sample_batched['weight']
 
-        data, label, weight = data.cuda(), label.cuda(), weight.cuda()
-        data, label, weight = Variable(data), Variable(label), Variable(weight).float()
+        data, label, label_array, weight = data.cuda(), label.cuda(), label_array.cuda(), weight.cuda()
+        data, label, label_array, weight = Variable(data), Variable(label), Variable(label_array), Variable(weight).float()
         optimizer.zero_grad()
         output = model(data)
-        loss = F.nll_loss(output, label)
+        loss = eq_nll_loss(input=output, target=label, eq_weight=weight.long())
         loss.backward()
         optimizer.step()
         if batch_idx % 1000 == 0:
@@ -77,19 +80,20 @@ def test():
     for batch_idx, sample_batched in enumerate(test_loader):
         data = sample_batched['feature_vector']
         label = sample_batched['label']
+        label_array = sample_batched['label_array']
         weight = sample_batched['weight']
 
-        data, label, weight = data.cuda(), label.cuda(), weight.cuda()
-        data, label, weight = Variable(data), Variable(label), Variable(weight).float()
+        data, label, label_array, weight = data.cuda(), label.cuda(), label_array.cuda(), weight.cuda()
+        data, label, label_array, weight = Variable(data), Variable(label), Variable(label_array), Variable(weight).float()
 
         output = model(data)
 
-        test_loss += F.nll_loss(output, label, size_average=False).data[0]  # sum up batch loss
+        test_loss += eq_nll_loss(input=output, target=label, eq_weight=weight)  # sum up batch loss
         pred = output.data.max(1, keepdim=True)[1] # get the index of the max log-probability
         correct += pred.eq(label.data.view_as(pred)).cpu().sum()
 
     test_loss /= len(test_loader.dataset)
-    event = '\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(test_loss, correct, len(test_loader.dataset), 100. * correct / len(test_loader.dataset))
+    event = '\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(float(test_loss), correct, len(test_loader.dataset), 100. * correct / len(test_loader.dataset))
     print(event)
     f.write(event+'\n')
 

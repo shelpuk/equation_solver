@@ -39,17 +39,20 @@ class equation_binary_dataset_train(Dataset):
             x = true_x
             #label = np.array([1, 0], dtype=np.int64)
             label = 1
+            label_array = np.array([0, 1])
             weight = 1
         else:
             x = np.random.randint(0, 1000)
             while x == true_x: x = np.random.randint(0, 1000)
             #label = np.array([0, 1], dtype=np.int64)
             label = 0
-            weight = abs(true_x - x)
+            label_array = np.array([1, 0])
+            weight = abs(x - true_x)
 
-        weight = np.array([weight, weight])
+        weight = np.array([weight])
+        label = np.array([label])
 
-        sample = {'a': a, 'b': b, 'x': x, 'label': label, 'true_x': true_x, 'weight': weight, 'feature_vector': eq_to_binary(a, x, b)}
+        sample = {'a': a, 'b': b, 'x': x, 'label': label, 'label_array': label_array, 'true_x': true_x, 'weight': weight, 'feature_vector': eq_to_binary(a, x, b)}
 
         return sample
 
@@ -74,16 +77,20 @@ class equation_binary_dataset_cv(Dataset):
             x = true_x
             #label = np.array([1, 0], dtype=np.int64)
             label = 1
+            label_array = np.array([0, 1])
             weight = 1
         else:
             x = np.random.randint(0, 1000, dtype=np.int32)
             while x == true_x: x = np.random.randint(0, 1000, dtype=np.int32)
             #label = np.array([0, 1], dtype=np.int64)
             label = 0
-            weight = abs(true_x - x)
+            label_array = np.array([1, 0])
+            weight = abs(x - true_x)
 
-        weight = np.array([weight, weight])
+        weight = np.array([weight])
+        label = np.array([label])
 
-        sample = {'a': a, 'b': b, 'x': x, 'label': label, 'true_x': true_x, 'weight': weight, 'feature_vector': eq_to_binary(a, x, b)}
+
+        sample = {'a': a, 'b': b, 'x': x, 'label': label, 'label_array': label_array, 'true_x': true_x, 'weight': weight, 'feature_vector': eq_to_binary(a, x, b)}
 
         return sample
