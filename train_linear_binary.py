@@ -17,13 +17,13 @@ test_loader = DataLoader(test_dataset, batch_size=50, shuffle=True, num_workers=
 #    print(sample_batched['feature_vector'].shape)
 #    if i_batch == 3: break
 
-model = models.eq_net_ff()
+model = models.eq_net_ff_dropout()
 
 model.cuda()
 
 #model = torch.load('test.pt')
 
-f = open('log_weight_extended_arch.log', 'w')
+f = open('log_weight_extended_arch_dropout.log', 'w')
 
 #if torch.cuda.device_count() > 1:
 #  print("Let's use", torch.cuda.device_count(), "GPUs!")
