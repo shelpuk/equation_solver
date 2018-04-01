@@ -22,8 +22,8 @@ def generate_images_linear(a, b, x):
     d = ImageDraw.Draw(img_ans)
     d.text((10, 10), str(x), font=fnt, fill=255)
 
-    img_eq.show()
-    img_ans.show()
+    #img_eq.show()
+    #img_ans.show()
 
     return img_eq, img_ans
 
@@ -32,7 +32,7 @@ def generate_data_point(a, b, x):
     img_eq_array = (np.array(img_eq) / 255)
     img_ans_array = np.array(img_ans) / 255
 
-    return np.concatenate((img_eq_array.reshape(img_eq_array.shape[0], img_eq_array.shape[1], 1), img_ans_array.reshape(img_ans_array.shape[0], img_ans_array.shape[1], 1)), axis=2)
+    return np.concatenate((img_eq_array.reshape(1, img_eq_array.shape[0], img_eq_array.shape[1]), img_ans_array.reshape(1, img_ans_array.shape[0], img_ans_array.shape[1])), axis=0)
 
 class equation_linear_images_dataset_train(Dataset):
 
