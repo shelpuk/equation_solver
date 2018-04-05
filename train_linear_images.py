@@ -56,11 +56,18 @@ def test():
     test_loss = 0
     correct = 0
 
+    file_error_analysis = open('errors.log', 'w')
+    file_error_analysis.write('a, b, true_x, suggested_x, true_label, prediction\n')
+
     for batch_idx, sample_batched in enumerate(test_loader):
         data = sample_batched['feature_vector']
         label = sample_batched['label']
         label_array = sample_batched['label_array']
         weight = sample_batched['weight']
+        a = sample_batched['a']
+        b = sample_batched['b']
+        true_x = sample_batched['true_x']
+        x = sample_batched['x']
 
         data, label, label_array, weight = data.cuda(), label.cuda(), label_array.cuda(), weight.cuda()
         data, label, label_array, weight = Variable(data), Variable(label), Variable(label_array), Variable(weight).float()
@@ -78,10 +85,29 @@ def test():
 
         correct += pred.eq(label.float()).long().cpu().sum()
 
+        # Error analysis
+
+        #print(label.data.cpu())
+        #output = output.data.cpu().numpy()
+
+        match = pred.eq(label.float()).long().cpu()
+        error_ids = (match == 0).nonzero()[:,0]
+        for i in list(error_ids):
+            i = int(i)
+            file_error_analysis.write(str(a.numpy()[i])+','
+                                      +str(b.numpy()[i])+','
+                                      +str(true_x.numpy()[i])+','
+                                      +str(x.numpy()[i])+','
+                                      +str(label.data.cpu().numpy()[i][0])+','
+                                      +str(output.data.cpu().numpy()[i][0])+'\n')
+
     #test_loss /= len(test_loader.dataset)
+
     event = '\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(float(test_loss)/len(test_loader.dataset), int(correct), len(test_loader.dataset), 100. * int(correct) / len(test_loader.dataset))
     print(event)
     f.write(event+'\n')
+    file_error_analysis.close()
+
 
 for epoch in range(1, 1000):
     test()
