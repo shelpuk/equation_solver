@@ -87,19 +87,22 @@ def test():
 
         # Error analysis
 
-        #print(label.data.cpu())
-        #output = output.data.cpu().numpy()
 
-        match = pred.eq(label.float()).long().cpu()
-        error_ids = (match == 0).nonzero()[:,0]
-        for i in list(error_ids):
-            i = int(i)
-            file_error_analysis.write(str(a.numpy()[i])+','
-                                      +str(b.numpy()[i])+','
-                                      +str(true_x.numpy()[i])+','
-                                      +str(x.numpy()[i])+','
-                                      +str(label.data.cpu().numpy()[i][0])+','
-                                      +str(output.data.cpu().numpy()[i][0])+'\n')
+        if int(pred.eq(label.float()).long().cpu().sum()) < test_loader.batch_size:
+
+            match = pred.eq(label.float()).long().cpu()
+
+            #print((match == 0).nonzero())
+
+            error_ids = (match == 0).nonzero()[:,0]
+            for i in list(error_ids):
+                i = int(i)
+                file_error_analysis.write(str(a.numpy()[i])+','
+                                          +str(b.numpy()[i])+','
+                                          +str(true_x.numpy()[i])+','
+                                          +str(x.numpy()[i])+','
+                                          +str(label.data.cpu().numpy()[i][0])+','
+                                          +str(output.data.cpu().numpy()[i][0])+'\n')
 
     #test_loss /= len(test_loader.dataset)
 

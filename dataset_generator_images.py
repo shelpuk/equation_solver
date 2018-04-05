@@ -27,6 +27,11 @@ def generate_images_linear(a, b, x):
 
     return img_eq, img_ans
 
+#img_eq, img_ans = generate_images_linear(847,-424347,501)
+
+#img_eq.show()
+#img_ans.show()
+
 def generate_data_point(a, b, x):
     img_eq, img_ans = generate_images_linear(a, b, x)
     img_eq_array = (np.array(img_eq) / 255)
