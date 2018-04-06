@@ -21,13 +21,16 @@ model = models.LeNet()
 
 model.cuda()
 
-#model = torch.load('test.pt')
-
+summary = repr(model)
+# model = torch.load('test.pt')
+print(summary)
 f = open('log_linear_images_lenet.log', 'w')
+f.write(summary + '\n')
 
-#if torch.cuda.device_count() > 1:
-#  print("Let's use", torch.cuda.device_count(), "GPUs!")
-#  model = nn.DataParallel(model)
+
+if torch.cuda.device_count() > 1:
+ print("Let's use", torch.cuda.device_count(), "GPUs!")
+ model = nn.DataParallel(model)
 
 optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
 
