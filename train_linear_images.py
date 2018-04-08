@@ -69,8 +69,11 @@ def test():
     test_loss = 0
     correct = 0
 
-    file_error_analysis = open('./'+ dir + '/' + 'errors.log', 'w')
+    file_error_analysis = open('./'+ dir + '/' + 'errors.csv', 'w')
+    file_full_activation = open('./' + dir + '/' + 'activations.csv', 'w')
+
     file_error_analysis.write('a, b, true_x, suggested_x, true_label, prediction\n')
+    file_full_activation.write('a, b, true_x, suggested_x, true_label, prediction, correct\n')
 
     for batch_idx, sample_batched in enumerate(test_loader):
         data = sample_batched['feature_vector']
@@ -97,8 +100,18 @@ def test():
         # correct += sum(pred.long() == label).cpu()
 
         correct += pred.eq(label.float()).long().cpu().sum()
+        correct_array = pred.eq(label.float()).long().cpu()
 
         # Error analysis
+
+        for i in range(len(data)):
+            file_full_activation.write(str(a.numpy()[i]) + ','
+                                      + str(b.numpy()[i]) + ','
+                                      + str(true_x.numpy()[i]) + ','
+                                      + str(x.numpy()[i]) + ','
+                                      + str(label.data.cpu().numpy()[i][0]) + ','
+                                      + str(output.data.cpu().numpy()[i][0]) + ','
+                                      + str(correct_array.data.cpu().numpy()[i][0]) +'\n')
 
         if int(pred.eq(label.float()).long().cpu().sum()) < test_loader.batch_size:
 
@@ -124,7 +137,7 @@ def test():
     print(event)
     f.write(event + '\n')
     file_error_analysis.close()
-
+    file_full_activation.close()
 
 for epoch in range(1, 1000):
     test()
