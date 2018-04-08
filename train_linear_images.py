@@ -19,7 +19,7 @@ test_loader = DataLoader(test_dataset, batch_size=50, shuffle=True, num_workers=
 #    print(sample_batched['feature_vector'].shape)
 #    if i_batch == 3: break
 
-model = models.LeNet()
+model = models.LeNet_reduced()
 model.cuda()
 summary = repr(model)
 # model = torch.load('test.pt')
@@ -113,24 +113,27 @@ def test():
                                       + str(output.data.cpu().numpy()[i][0]) + ','
                                       + str(correct_array.data.cpu().numpy()[i][0]) +'\n')
 
-        if int(pred.eq(label.float()).long().cpu().sum()) < test_loader.batch_size:
+        #if int(pred.eq(label.float()).long().cpu().sum()) < test_loader.batch_size:
 
-            match = pred.eq(label.float()).long().cpu()
+        match = pred.eq(label.float()).long().cpu()
 
-            # print((match == 0).nonzero())
+        if len((match == 0).nonzero().size()) > 0:
 
             error_ids = (match == 0).nonzero()[:, 0]
 
-            if len(error_ids.size()) > 0:
+            #print(len(error_ids.size()))
+            #print(error_ids.size())
 
-                for i in list(error_ids):
-                    i = int(i)
-                    file_error_analysis.write(str(a.numpy()[i]) + ','
-                                              + str(b.numpy()[i]) + ','
-                                              + str(true_x.numpy()[i]) + ','
-                                              + str(x.numpy()[i]) + ','
-                                              + str(label.data.cpu().numpy()[i][0]) + ','
-                                              + str(output.data.cpu().numpy()[i][0]) + '\n')
+            #if len(error_ids.size()) > 0:
+
+            for i in list(error_ids):
+                i = int(i)
+                file_error_analysis.write(str(a.numpy()[i]) + ','
+                                          + str(b.numpy()[i]) + ','
+                                          + str(true_x.numpy()[i]) + ','
+                                          + str(x.numpy()[i]) + ','
+                                          + str(label.data.cpu().numpy()[i][0]) + ','
+                                          + str(output.data.cpu().numpy()[i][0]) + '\n')
 
     # test_loss /= len(test_loader.dataset)
 
