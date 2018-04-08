@@ -120,14 +120,17 @@ def test():
             # print((match == 0).nonzero())
 
             error_ids = (match == 0).nonzero()[:, 0]
-            for i in list(error_ids):
-                i = int(i)
-                file_error_analysis.write(str(a.numpy()[i]) + ','
-                                          + str(b.numpy()[i]) + ','
-                                          + str(true_x.numpy()[i]) + ','
-                                          + str(x.numpy()[i]) + ','
-                                          + str(label.data.cpu().numpy()[i][0]) + ','
-                                          + str(output.data.cpu().numpy()[i][0]) + '\n')
+
+            if len(error_ids.size()) > 0:
+
+                for i in list(error_ids):
+                    i = int(i)
+                    file_error_analysis.write(str(a.numpy()[i]) + ','
+                                              + str(b.numpy()[i]) + ','
+                                              + str(true_x.numpy()[i]) + ','
+                                              + str(x.numpy()[i]) + ','
+                                              + str(label.data.cpu().numpy()[i][0]) + ','
+                                              + str(output.data.cpu().numpy()[i][0]) + '\n')
 
     # test_loss /= len(test_loader.dataset)
 
