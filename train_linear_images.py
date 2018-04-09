@@ -19,7 +19,7 @@ test_loader = DataLoader(test_dataset, batch_size=50, shuffle=True, num_workers=
 #    print(sample_batched['feature_vector'].shape)
 #    if i_batch == 3: break
 
-model = models.LeNet_reduced()
+model = models.LeNet_reduced_dropout()
 model.cuda()
 summary = repr(model)
 # model = torch.load('test.pt')
