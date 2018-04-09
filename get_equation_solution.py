@@ -32,7 +32,7 @@ def dump_solutions(dir, equations, solutions):
         solution_array, _ = convert_to_image(solutions_array[i, 0])
         stacked_image_array = np.concatenate((equation_array, solution_array), axis=0)
         stacked_image = Image.fromarray(stacked_image_array)
-        stacked_image.show()
+        #stacked_image.show()
         stacked_image.save(dir+'/'+str(i)+'.png')
 
 test_dataset = equation_linear_images_dataset_cv(cv_set_file='cv_set_linear.p', right_asnwer_chance=.5)
