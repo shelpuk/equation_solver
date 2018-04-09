@@ -19,9 +19,21 @@ def convert_to_image(img_array):
 
     img = Image.fromarray(img_array)
 
-    img.show()
+    #img.show()
 
-    return img
+    return img_array, img
+
+def dump_solutions(dir, equations, solutions):
+    equations_array = equations.data.numpy()
+    solutions_array = solutions.data.numpy()
+
+    for i in range(equations_array.shape[0]):
+        equation_array, _ = convert_to_image(equations_array[i, 0])
+        solution_array, _ = convert_to_image(solutions_array[i, 0])
+        stacked_image_array = np.concatenate((equation_array, solution_array), axis=0)
+        stacked_image = Image.fromarray(stacked_image_array)
+        stacked_image.show()
+        stacked_image.save(dir+'/'+str(i)+'.png')
 
 test_dataset = equation_linear_images_dataset_cv(cv_set_file='cv_set_linear.p', right_asnwer_chance=.5)
 test_loader = DataLoader(test_dataset, batch_size=50, shuffle=True, num_workers=16)
@@ -46,9 +58,9 @@ for batch_idx, sample_batched in enumerate(test_loader):
     equation = Variable(torch.from_numpy(data), requires_grad=False)
     #img = convert_to_image(img_array)
 
-    answer = Variable(torch.randn(50, 1, 30, 100), requires_grad=True)
+    answer = Variable(torch.zeros(50, 1, 30, 100), requires_grad=True)
 
-    optimizer = optim.SGD([answer], lr=0.01, momentum=0.5)
+    optimizer = optim.SGD([answer], lr=0.001, momentum=0.5)
     optimizer.zero_grad()
 
     #print(equation.size())
@@ -64,6 +76,11 @@ for batch_idx, sample_batched in enumerate(test_loader):
         loss = torch.sum(1. - output)
         if i % 1000 == 0:
             print('Iter: ', str(i), ', loss: ', float(loss))
+
+        if i % 1000 == 0:
+            dump_solutions('img_solutions', equation, answer)
+
+
         loss.backward()
         optimizer.step()
 
