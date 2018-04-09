@@ -48,10 +48,21 @@ correct = []
 batch_size = 50
 
 for batch_idx, sample_batched in enumerate(test_loader):
+
+    #data_test = sample_batched['feature_vector']
+    #label = sample_batched['label']
+
     data = sample_batched['feature_vector'].numpy()[:,0,:,:].reshape((50,1,30,100))
 
-    #print(data.shape)
+    #data_test, label = data_test.cuda(), label.cuda()
+    #data_test, label = Variable(data_test), Variable(label)
 
+    #output = the_model(data_test.float())
+    #pred = torch.round(output).float()
+    #correct = pred.eq(label.float()).long().cpu().sum()
+    #print(int(correct))
+
+    #print(data.shape)
     #print(data[:,:,:,:].size())
 
     #equation = Variable(data[0,0,:,:].view(1, 1, 30, 100), requires_grad=False)
@@ -73,6 +84,7 @@ for batch_idx, sample_batched in enumerate(test_loader):
     for i in range(1000000):
         input_data = torch.cat((equation.float(), answer.float()), 1)
         output = the_model(input_data.cuda())
+        #loss = torch.sum(1. - output)
         loss = torch.sum(1. - output)
         if i % 1000 == 0:
             print('Iter: ', str(i), ', loss: ', float(loss))
