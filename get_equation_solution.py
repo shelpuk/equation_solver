@@ -60,7 +60,7 @@ for batch_idx, sample_batched in enumerate(test_loader):
 
     answer = Variable(torch.zeros(50, 1, 30, 100), requires_grad=True)
 
-    optimizer = optim.SGD([answer], lr=0.001, momentum=0.5)
+    optimizer = optim.SGD([answer], lr=0.01, momentum=0.5)
     optimizer.zero_grad()
 
     #print(equation.size())
@@ -77,7 +77,7 @@ for batch_idx, sample_batched in enumerate(test_loader):
         if i % 1000 == 0:
             print('Iter: ', str(i), ', loss: ', float(loss))
 
-        if i % 1000 == 0:
+        if i % 100 == 0:
             dump_solutions('img_solutions', equation, answer)
 
 
