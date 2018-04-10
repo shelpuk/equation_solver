@@ -71,7 +71,9 @@ for batch_idx, sample_batched in enumerate(test_loader):
 
     answer = Variable(torch.zeros(50, 1, 30, 100), requires_grad=True)
 
-    optimizer = optim.SGD([answer], lr=0.01, momentum=0.5)
+    #optimizer = optim.SGD([answer], lr=0.01, momentum=0.5)
+    optimizer = optim.Adam([answer], lr=0.01)
+
     optimizer.zero_grad()
 
     #print(equation.size())
