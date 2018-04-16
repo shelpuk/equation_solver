@@ -6,6 +6,7 @@ import numpy as np
 from PIL import Image
 import torch.nn as nn
 import torch.optim as optim
+import torch.nn.functional as F
 
 def binary_to_int(binary_array):
     return int(str(binary_array), 2)
@@ -49,8 +50,8 @@ for batch_idx, sample_batched in enumerate(test_loader):
 
     answer = Variable(torch.zeros(50, 10), requires_grad=True)
 
-    optimizer = optim.SGD([answer], lr=0.01, momentum=0.5)
-    #optimizer = optim.Adam([answer], lr=0.1)
+    #optimizer = optim.SGD([answer], lr=0.0001, momentum=0.5)
+    optimizer = optim.Adam([answer], lr=0.001)
 
     optimizer.zero_grad()
 
@@ -62,7 +63,7 @@ for batch_idx, sample_batched in enumerate(test_loader):
     #print(input_data.size())
 
     for i in range(1000000):
-        input_data = torch.cat((equation_a.float(), answer.float(), equation_b.float()), 1)
+        input_data = torch.cat((equation_a.float(), F.sigmoid(answer.float()), equation_b.float()), 1)
         output = the_model(input_data.cuda())
         #loss = torch.sum(1. - output)
         loss = torch.sum(1. - output)
@@ -70,7 +71,7 @@ for batch_idx, sample_batched in enumerate(test_loader):
             print('Iter: ', str(i), ', loss: ', float(loss))
 
         if i % 1000 == 0:
-            print(answer[:3,:])
+            print(F.sigmoid(answer[:3,:]))
             #dump_solutions(equation_a=equation_a,
             #               equation_b=equation_b,
             #               solutions=answer,
