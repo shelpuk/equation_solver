@@ -12,7 +12,7 @@ def convert_to_image(img_array):
     min = np.min(img_array)
     max = np.max(img_array)
     if min < 0:
-        img_array = 1.*(img_array - min) / ((1.*max / (max - min)))
+        img_array = 1.*(img_array - min) / ((1.*max / ((max - min)+0.0000001))+0.0000001)
 
     img_array = img_array * 255
     img_array = np.clip(img_array, a_min=0, a_max=255).astype(np.uint8)
@@ -36,11 +36,11 @@ def dump_solutions(dir, equations, solutions):
         stacked_image.save(dir+'/'+str(i)+'.png')
 
 test_dataset = equation_linear_images_dataset_cv(cv_set_file='cv_set_linear.p', right_asnwer_chance=0.5)
-test_loader = DataLoader(test_dataset, batch_size=50, shuffle=True, num_workers=16)
+test_loader = DataLoader(test_dataset, batch_size=50, shuffle=False, num_workers=16)
 
 path_to_folder = './LeNet_reduced_dropout_04-08-23:59/'  # change here directory name
 the_model = torch.load(path_to_folder + 'model.pt')
-print(repr(the_model))
+#print(repr(the_model))
 weights = the_model.state_dict()
 the_model = the_model.cuda()
 
@@ -50,11 +50,18 @@ for batch_idx, sample_batched in enumerate(test_loader):
 
     equation = Variable(torch.from_numpy(data), requires_grad=False)
 
+    # Initialize answer as random noise
+    #answer = Variable(torch.rand(50, 1, 30, 100), requires_grad=True)
+
+    # Initialize answer as a black image
     #answer = Variable(torch.ones(50, 1, 30, 100) - 10, requires_grad=True)
+
+    #Initialize answer as a right answer
     answer = Variable(torch.from_numpy(sample_batched['feature_vector'].numpy()[:, 1, :, :].reshape((50, 1, 30, 100))), requires_grad=True)
 
     #optimizer = optim.SGD([answer], lr=0.01, momentum=0.5)
-    optimizer = optim.Adam([answer], lr=0.001)
+    optimizer = optim.Adam([answer], lr=0.0001)
+    #optimizer = optim.RMSprop([answer], lr=0.001)
 
     optimizer.zero_grad()
 
@@ -67,6 +74,8 @@ for batch_idx, sample_batched in enumerate(test_loader):
     output_test = the_model(data_test)
     loss = torch.sum(1. - output_test)
     correct = output_test.eq(label_test.float()).long().cpu().sum()
+
+
 
     print(output_test)
 
@@ -83,7 +92,7 @@ for batch_idx, sample_batched in enumerate(test_loader):
         if i % 100 == 0:
             dump_solutions('img_solutions', equation, answer)
 
-
+        optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 

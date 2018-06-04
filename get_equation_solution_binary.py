@@ -78,7 +78,7 @@ for batch_idx, sample_batched in enumerate(test_loader):
             #               true_x=true_x,
             #               path_to_folder=path_to_folder)
 
-
+        optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
