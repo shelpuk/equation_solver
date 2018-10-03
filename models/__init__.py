@@ -4,3 +4,4 @@ from models.lenet import LeNet
 from models.lenet import LeNet_dropout
 from models.lenet_reduced import LeNet_reduced
 from models.lenet_reduced import LeNet_reduced_dropout
+from models.lenet_reduced_no_bn_no_dropout import LeNet_reduced_no_bn

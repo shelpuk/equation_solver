@@ -8,26 +8,30 @@ from models import *
 import models
 import os, sys
 import time
+from multiprocessing import freeze_support
 
 train_dataset = equation_linear_images_dataset_train(cv_set_file='cv_set_linear.p', right_asnwer_chance=.5)
 test_dataset = equation_linear_images_dataset_cv(cv_set_file='cv_set_linear.p', right_asnwer_chance=.5)
 
-train_loader = DataLoader(train_dataset, batch_size=50, shuffle=True, num_workers=16)
-test_loader = DataLoader(test_dataset, batch_size=50, shuffle=True, num_workers=16)
+train_loader = DataLoader(train_dataset, batch_size=50, shuffle=True, num_workers=4)
+test_loader = DataLoader(test_dataset, batch_size=50, shuffle=True, num_workers=4)
 
 # for i_batch, sample_batched in enumerate(dataloader):
 #    print(sample_batched['feature_vector'].shape)
 #    if i_batch == 3: break
 
-model = models.LeNet_reduced_dropout()
-model.cuda()
-summary = repr(model)
+# model = models.LeNet_reduced_no_bn()
+# #model.cuda()
+# summary = repr(model)
 # model = torch.load('test.pt')
-print(summary)
+#print(summary)
+
+
 
 mod_name = summary.split('\n')[0][:-1]  # model name
-dir = mod_name + "_" + time.strftime("%m-%d-%H:%M")
-os.makedirs(dir)
+dir = mod_name + "_" + time.strftime("%m-%d-%H-%M")
+if not os.path.exists(dir):
+    os.makedirs(dir)
 
 f = open('./'+ dir + '/' + 'log_' + mod_name + '.log', 'w')
 f.write(summary + '\n')
@@ -36,7 +40,7 @@ f.write(summary + '\n')
 #  print("Let's use", torch.cuda.device_count(), "GPUs!")
 #  model = nn.DataParallel(model)
 
-optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+optimizer = optim.SGD(model.parameters(), lr=0.0001, momentum=0.5)
 
 
 def train(epoch):
@@ -47,7 +51,7 @@ def train(epoch):
         label_array = sample_batched['label_array']
         weight = sample_batched['weight']
 
-        data, label, label_array, weight = data.cuda(), label.cuda(), label_array.cuda(), weight.cuda()
+        #data, label, label_array, weight = data.cuda(), label.cuda(), label_array.cuda(), weight.cuda()
         data, label, label_array, weight = Variable(data), Variable(label), Variable(label_array), Variable(
             weight).float()
         optimizer.zero_grad()
@@ -85,7 +89,7 @@ def test():
         true_x = sample_batched['true_x']
         x = sample_batched['x']
 
-        data, label, label_array, weight = data.cuda(), label.cuda(), label_array.cuda(), weight.cuda()
+        #data, label, label_array, weight = data.cuda(), label.cuda(), label_array.cuda(), weight.cuda()
         data, label, label_array, weight = Variable(data), Variable(label), Variable(label_array), Variable(
             weight).float()
 
@@ -117,7 +121,7 @@ def test():
 
         match = pred.eq(label.float()).long().cpu()
 
-        if len((match == 0).nonzero().size()) > 0:
+        if len((match == 0).nonzero().size()) > 1:
 
             error_ids = (match == 0).nonzero()[:, 0]
 
@@ -145,7 +149,10 @@ def test():
     file_error_analysis.close()
     file_full_activation.close()
 
-for epoch in range(1, 1000):
-    test()
-    train(epoch)
-    torch.save(model, './' + dir + '/' + 'model' + '.pt')
+
+if __name__ == '__main__':
+    freeze_support()
+    for epoch in range(1, 1000):
+        test()
+        train(epoch)
+        torch.save(model, './' + dir + '/' + 'model' + '.pt')

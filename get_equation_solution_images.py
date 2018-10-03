@@ -7,6 +7,11 @@ from PIL import Image
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
+# from multiprocessing import freeze_support
+#
+# freeze_support()
+
+batch_size = 1
 
 def convert_to_image(img_array):
     min = np.min(img_array)
@@ -35,67 +40,103 @@ def dump_solutions(dir, equations, solutions):
         #stacked_image.show()
         stacked_image.save(dir+'/'+str(i)+'.png')
 
-test_dataset = equation_linear_images_dataset_cv(cv_set_file='cv_set_linear.p', right_asnwer_chance=0.5)
-test_loader = DataLoader(test_dataset, batch_size=50, shuffle=False, num_workers=16)
+#test_dataset = equation_linear_images_dataset_cv(cv_set_file='cv_set_linear.p', right_asnwer_chance=1.0)
+test_dataset = equation_linear_images_dataset_same_solution(147)
+test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=0)
 
-path_to_folder = './LeNet_reduced_dropout_04-08-23:59/'  # change here directory name
+path_to_folder = './LeNet_reduced_no_bn_07-16-15-13/'  # change here directory name
 the_model = torch.load(path_to_folder + 'model.pt')
-#print(repr(the_model))
+print(repr(the_model))
 weights = the_model.state_dict()
-the_model = the_model.cuda()
+#the_model = the_model.cuda()
+the_model.eval()
+
 
 for batch_idx, sample_batched in enumerate(test_loader):
 
-    data = sample_batched['feature_vector'].numpy()[:,0,:,:].reshape((50,1,30,100))
-
+    data = sample_batched['feature_vector'].numpy()[:,0,:,:].reshape((batch_size,1,30,100))
+    # im = Image.fromarray(data.reshape((30,100)))
+    # im.show()
     equation = Variable(torch.from_numpy(data), requires_grad=False)
 
     # Initialize answer as random noise
-    #answer = Variable(torch.rand(50, 1, 30, 100), requires_grad=True)
+    #answer = Variable(0.5*torch.rand(50, 1, 30, 100), requires_grad=True)
 
     # Initialize answer as a black image
-    #answer = Variable(torch.ones(50, 1, 30, 100) - 10, requires_grad=True)
+    #answer = Variable(torch.ones(batch_size, 1, 30, 100)-1, requires_grad=True)
 
     #Initialize answer as a right answer
-    answer = Variable(torch.from_numpy(sample_batched['feature_vector'].numpy()[:, 1, :, :].reshape((50, 1, 30, 100))), requires_grad=True)
+    answer = Variable(torch.from_numpy(sample_batched['feature_vector'].numpy()[:, 1, :, :].reshape((batch_size, 1, 30, 100))), requires_grad=True)
 
     #optimizer = optim.SGD([answer], lr=0.01, momentum=0.5)
     optimizer = optim.Adam([answer], lr=0.0001)
     #optimizer = optim.RMSprop([answer], lr=0.001)
 
+
+
+
     optimizer.zero_grad()
 
     input_data = torch.cat((equation.float(), answer.float()), 1)
 
-    output = the_model(input_data.cuda())
+    output = the_model(input_data)#.cuda())
 
-    data_test = Variable(torch.from_numpy(sample_batched['feature_vector'].numpy()).cuda()).float()
-    label_test = Variable(sample_batched['label'].cuda())
+    data_test = Variable(torch.from_numpy(sample_batched['feature_vector'].numpy())).float()#.cuda()).float()
+    label_test = Variable(sample_batched['label'])#.cuda())
     output_test = the_model(data_test)
     loss = torch.sum(1. - output_test)
+
     correct = output_test.eq(label_test.float()).long().cpu().sum()
 
 
 
     print(output_test)
 
-    print('Initial loss: ', float(loss), ', correct: ', int(correct))
+    print('Initial loss: ', float(loss), ', correct: ', int(correct),output_test)
 
     for i in range(1000000):
         input_data = torch.cat((equation.float(), answer.float()), 1)
-        output = the_model(input_data.cuda())
+        output = the_model(input_data)#.cuda())
         #loss = torch.sum(1. - output)
-        loss = torch.sum(1. - output)
+        loss = torch.sum(1.0 - output)/ batch_size
         if i % 1000 == 0:
             print('Iter: ', str(i), ', loss: ', float(loss))
+            #print(output.shape)
 
         if i % 100 == 0:
             dump_solutions('img_solutions', equation, answer)
+            print("dump", float(loss),output)
+            with open("img_solutions\logs.csv",'a') as f:
+                f.write(str(i)+","+",".join([str(x[0]) for x in output.detach().numpy()])+"\n")
 
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
-
+        if loss < 0.00001:
+            break
     break
 
+# test_dataset = equation_linear_images_dataset_same_solution(100)
+# test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=0)
+#
+# i = 0
+# success = 0
+# total = 100
+# for batch_idx, sample_batched in enumerate(test_loader):
+#     i+=1
+#     data = sample_batched['feature_vector'].numpy()[:,0,:,:].reshape((batch_size,1,30,100))
+#     equation = Variable(torch.from_numpy(data), requires_grad=False)
+#     input_data = torch.cat((equation.float(), answer.float()), 1)
+#     output = the_model(input_data)
+#     loss = torch.sum(1.0 - output)/ batch_size
+#
+#     print (output.detach().numpy()[0][0])
+#     if output.detach().numpy()[0][0] > 0.5:
+#         success += 1
+#         dump_solutions('img_solutions_success', equation, answer,i)
+#     else:
+#         dump_solutions('img_solutions_fail', equation, answer,i)
+#     if i >= total:
+#         print (success / total * 100)
+#         break

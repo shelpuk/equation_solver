@@ -9,7 +9,7 @@ import random
 from PIL import Image, ImageDraw, ImageFont
 
 def generate_images_linear(a, b, x):
-
+    #print(a,b,x)
     img_eq = Image.new('L', (100, 30), color=0)
 
     fnt = ImageFont.truetype('arial.ttf', 15)
@@ -22,8 +22,8 @@ def generate_images_linear(a, b, x):
     d = ImageDraw.Draw(img_ans)
     d.text((10, 10), str(x), font=fnt, fill=255)
 
-    #img_eq.show()
-    #img_ans.show()
+   # img_eq.show()
+   # img_ans.show()
 
     return img_eq, img_ans
 
@@ -119,3 +119,20 @@ class equation_linear_images_dataset_cv(Dataset):
         return sample
 
 
+class equation_linear_images_dataset_same_solution(Dataset):
+    def __init__(self, x):
+        self.x = x
+
+    def __len__(self):
+        return 1000000
+
+    def __getitem__(self, idx):
+        a = np.random.randint(0, 1000)
+        b = -a * self.x
+        label = 1
+        label = np.array([label])
+        label_array = np.array([1, 0])
+
+        sample = {'a': a, 'b': b, 'x': self.x, 'label': label, 'label_array': label_array, 'true_x': self.x, 'weight': 1, 'feature_vector': generate_data_point(a, b, self.x)}
+
+        return sample
